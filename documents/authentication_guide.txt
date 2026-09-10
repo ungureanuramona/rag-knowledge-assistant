@@ -1,0 +1,7 @@
+Authentication Guide
+
+Users can reset a forgotten password from the login page by selecting "Forgot Password".
+
+If an account is locked after multiple failed login attempts, an administrator can unlock the account from the user management page.
+
+Single sign-on issues can be caused by an expired identity provider certificate or an incorrect SAML configuration.

@@ -1,0 +1,9 @@
+API Integration Guide
+
+The Orders API uses HTTPS and JSON requests. Clients must include a valid API key in the Authorization header.
+
+A 401 response means the API key is missing or invalid.
+
+A 500 response indicates a server-side error. Capture the request ID and contact the support team.
+
+Rate limiting returns a 429 response. Clients should retry the request with exponential backoff.

@@ -1,0 +1,7 @@
+Reporting Guide
+
+Reports are refreshed every night at 02:00 UTC.
+
+Duplicate records can occur when the same customer is imported from multiple data sources.
+
+If a report does not show recent data, verify that the source integration completed successfully and wait for the next refresh cycle.
