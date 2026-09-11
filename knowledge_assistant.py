@@ -1,33 +1,9 @@
-import re
 from pathlib import Path
 
-
-STOP_WORDS = {
-    "a",
-    "an",
-    "and",
-    "are",
-    "about",
-    "does",
-    "for",
-    "how",
-    "i",
-    "in",
-    "is",
-    "of",
-    "on",
-    "or",
-    "the",
-    "to",
-    "what",
-    "why",
-    "with",
-}
+from sentence_transformers import SentenceTransformer, util
 
 
-def tokenize(text):
-    words = re.findall(r"\b\w+\b", text.lower())
-    return {word for word in words if word not in STOP_WORDS}
+MODEL_NAME = "all-MiniLM-L6-v2"
 
 
 def load_documents(documents_folder):
@@ -44,22 +20,24 @@ def load_documents(documents_folder):
     return documents
 
 
-def find_relevant_documents(question, documents, limit=2):
-    question_words = tokenize(question)
+def find_relevant_documents(question, documents, model, limit=2):
+    document_texts = [document["content"] for document in documents]
+
+    question_embedding = model.encode(question, convert_to_tensor=True)
+    document_embeddings = model.encode(document_texts, convert_to_tensor=True)
+
+    similarity_scores = util.cos_sim(question_embedding, document_embeddings)[0]
+
     scored_documents = []
 
-    for document in documents:
-        document_words = tokenize(document["content"])
-        score = len(question_words.intersection(document_words))
-
-        if score > 0:
-            scored_documents.append(
-                {
-                    "source": document["source"],
-                    "content": document["content"],
-                    "score": score,
-                }
-            )
+    for index, score in enumerate(similarity_scores):
+        scored_documents.append(
+            {
+                "source": documents[index]["source"],
+                "content": documents[index]["content"],
+                "score": float(score),
+            }
+        )
 
     scored_documents.sort(key=lambda document: document["score"], reverse=True)
 
@@ -71,23 +49,22 @@ def main():
     documents_folder = project_folder / "documents"
     documents = load_documents(documents_folder)
 
-    question = input("Ask a question about the knowledge base: ")
+    print("Loading the semantic search model...")
+    model = SentenceTransformer(MODEL_NAME)
+
+    question = input("\nAsk a question about the knowledge base: ")
 
     if not question.strip():
         print("Please enter a question.")
         return
 
-    results = find_relevant_documents(question, documents)
-
-    if not results:
-        print("\nNo relevant documents found.")
-        return
+    results = find_relevant_documents(question, documents, model)
 
     print("\n--- Relevant Sources ---")
 
     for result in results:
         print(f"\nSource: {result['source']}")
-        print(f"Relevance score: {result['score']}")
+        print(f"Similarity score: {result['score']:.2f}")
         print(result["content"])
 
 
