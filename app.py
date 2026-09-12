@@ -29,20 +29,44 @@ st.set_page_config(
 )
 
 st.title("📚 RAG Knowledge Assistant")
-st.write("Ask a question about the support knowledge base.")
+st.caption("Ask questions about the support knowledge base.")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 documents = load_knowledge_base()
 embedding_model = load_embedding_model()
 
-question = st.text_input(
-    "Your question",
-    placeholder="For example: What should I do when I get a 401 error?",
-)
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
-if st.button("Ask question"):
-    if not question.strip():
-        st.warning("Please enter a question.")
-    else:
+        if message["role"] == "assistant":
+            st.write("**Relevant source:**")
+
+            for document in message["sources"]:
+                st.write(
+                    f"- {document['source']} "
+                    f"(similarity: {document['score']:.2f})"
+                )
+
+                with st.expander(f"View {document['source']}"):
+                    st.text(document["content"])
+
+question = st.chat_input("Ask a support question")
+
+if question:
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": question,
+        }
+    )
+
+    with st.chat_message("user"):
+        st.write(question)
+
+    with st.chat_message("assistant"):
         with st.spinner("Searching the knowledge base and generating an answer..."):
             relevant_documents = find_relevant_documents(
                 question,
@@ -51,12 +75,22 @@ if st.button("Ask question"):
             )
             answer = generate_answer(question, relevant_documents)
 
-        st.subheader("Answer")
         st.write(answer)
+        st.write("**Relevant source:**")
 
-        st.subheader("Relevant source")
         for document in relevant_documents:
-            st.write(f"**{document['source']}** — similarity: {document['score']:.2f}")
+            st.write(
+                f"- {document['source']} "
+                f"(similarity: {document['score']:.2f})"
+            )
 
-            with st.expander("View source content"):
+            with st.expander(f"View {document['source']}"):
                 st.text(document["content"])
+
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": answer,
+            "sources": relevant_documents,
+        }
+    )
