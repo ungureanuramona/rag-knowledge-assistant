@@ -11,17 +11,15 @@ The application finds the most relevant document with semantic search, then uses
 - Shows the most relevant source document and similarity score
 - Generates answers with a local Ollama model (`gemma3:4b`)
 - Includes source grounding in generated answers
+- Provides a browser interface with Streamlit
 - Uses fictional support documentation only
 
 ## Example
 
 ```text
-Ask a question about the knowledge base: What should I do when I get a 401 error from the Orders API?
+Question: What should I do when I get a 401 error from the Orders API?
 
---- Relevant Sources ---
-- api_integration_guide.txt (0.77)
-
---- Generated Answer ---
+Answer:
 The API key is missing or invalid. Source: api_integration_guide.txt
 ```
 
@@ -33,6 +31,7 @@ rag-knowledge-assistant/
 │   ├── api_integration_guide.txt
 │   ├── authentication_guide.txt
 │   └── reporting_guide.txt
+├── app.py
 ├── knowledge_assistant.py
 └── requirements.txt
 ```
@@ -66,15 +65,18 @@ docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
 docker exec -it ollama ollama pull gemma3:4b
 ```
 
-### 4. Run the application
+### 4. Run the browser interface
 
 ```powershell
-.\.venv\Scripts\python.exe knowledge_assistant.py
+.\.venv\Scripts\python.exe -m streamlit run app.py
 ```
+
+Open `http://localhost:8501` if the browser does not open automatically.
 
 ## Tech Stack
 
 - Python
+- Streamlit
 - Sentence Transformers
 - Ollama
 - Gemma 3 4B
